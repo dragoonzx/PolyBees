@@ -52,9 +52,12 @@ function Account() {
   if (!isAuthenticated || !account) {
     return (
       <>
-        <div onClick={() => setIsAuthModalVisible(true)}>
-          <p style={styles.text}>Authenticate</p>
-        </div>
+        <button
+          className="mr-2 btn btn-primary"
+          onClick={() => setIsAuthModalVisible(true)}
+        >
+          Authenticate
+        </button>
         <Modal
           visible={isAuthModalVisible}
           footer={null}

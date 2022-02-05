@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useMoralis } from "react-moralis";
 import { getEllipsisTxt } from "../../helpers/formatters";
 import useNativeTransactions from "hooks/useNativeTransactions";
-import "antd/dist/antd.css";
+// import "antd/dist/antd.css";
 import { Skeleton, Table } from "antd";
 import styles from "./styles";
 
