@@ -5,7 +5,7 @@ contract TwitterModule {
   mapping(uint256 => TwitterOffer) public offers;
   mapping(address => uint256[]) offersByEmployer;
   mapping(address => uint256[]) offersByInfluencer;
-  uint256 counter;
+  uint256 public counter;
 
   function newOffer(
     string calldata influencerHandle,
