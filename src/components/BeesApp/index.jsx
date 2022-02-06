@@ -13,7 +13,7 @@ const TWITTER_CONTRACT = "0xC7E62A952AF4A0bCCc8A73446e6243B454F6835D";
 
 const BeesApp = () => {
   const [panel, setPanel] = useState("list");
-  const { user } = useMoralis();
+  const { account, isAuthenticated } = useMoralis();
 
   const { fetch, data, isLoading } = useMoralisQuery("Tasks");
   const { isSaving, save } = useNewMoralisObject("Tasks");
@@ -40,16 +40,20 @@ const BeesApp = () => {
       signer,
     );
 
-    await twitterContract.newOffer(
+    const tx = await twitterContract.newOffer(
       influencerHandle,
       requiredText,
       rewardAddress,
-      { value },
+      { value: ethers.utils.parseUnits(String(value)) },
     );
+    await tx.wait();
   };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitForm = async () => {
     try {
+      setIsSubmitting(true);
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
       const twitterContract = new ethers.Contract(
@@ -57,21 +61,22 @@ const BeesApp = () => {
         TwitterModule,
         signer,
       );
-      // ether callStatic counter and set it into order
-      const counter = await twitterContract.counter();
-      console.log({ counter });
-      await save({
-        ...fields,
-        owner: user?.get("ethAddress"),
-        counter: counter + 1,
-      });
-      await fetch();
       await submitOfferContract({
         influencerHandle: fields.twitter,
         requiredText: fields.text,
         rewardAddress: fields.address,
         value: fields.bounty,
       });
+      // ether callStatic counter and set it into order
+      const counter = await twitterContract.counter();
+      console.log({ counter });
+      await save({
+        ...fields,
+        owner: account,
+        counter: String(Number(counter)),
+      });
+      console.log("SUCCESSFULY SAVED");
+      await fetch();
 
       toast.success("Successfully saved");
       setTimeout(() => {
@@ -86,6 +91,8 @@ const BeesApp = () => {
     } catch (err) {
       console.error(err);
       toast.error("Error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -93,8 +100,16 @@ const BeesApp = () => {
     console.log(id);
   };
 
+  const [isClaimed, setIsClaimed] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
+
   const claimTask = async (offerId) => {
-    const signer = new ethers.Wallet(process.env.REACT_APP_DECIDER_KEY);
+    setIsClaiming(true);
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = new ethers.Wallet(
+      process.env.REACT_APP_DECIDER_KEY,
+      provider,
+    );
 
     const twitterContract = new ethers.Contract(
       TWITTER_CONTRACT,
@@ -102,9 +117,16 @@ const BeesApp = () => {
       signer,
     );
 
-    await twitterContract.resolveOffer(offerId);
+    const tx = await twitterContract.resolveOffer(Number(offerId - 1));
+    await tx.wait();
 
-    toast.success("Successfully claimed");
+    setTimeout(() => {
+      setIsClaiming(false);
+
+      toast.success("Successfully claimed");
+
+      setIsClaimed(true);
+    }, 1000);
 
     await fetch("https://api.nftport.xyz/v0/mints/easy/urls", {
       method: "POST",
@@ -117,13 +139,13 @@ const BeesApp = () => {
         description: "Proof of Work NFT",
         file_url:
           "https://raw.githubusercontent.com/dragoonzx/PolyBees/cd140337fbe4e28e1c558b616c92d8ce8c48d864/src/assets/logo.svg",
-        mint_to_address: user?.get("ethAddress"),
+        mint_to_address: account,
       }),
     });
   };
 
   console.log(data);
-  console.log(user?.get("ethAddress"));
+  console.log(isAuthenticated, account);
 
   return (
     <div className="-mt-8">
@@ -145,9 +167,7 @@ const BeesApp = () => {
           </ul>
         </div>
         {data.find(
-          (v) =>
-            v?.get("address")?.toLowerCase() ===
-            user?.get("ethAddress")?.toLowerCase(),
+          (v) => v?.get("address")?.toLowerCase() === account?.toLowerCase(),
         ) ? (
           <div className="indicator-item badge badge-primary">
             You have new one
@@ -235,7 +255,7 @@ const BeesApp = () => {
                 onClick={() => submitForm()}
                 className={classNames(
                   "btn btn-primary mt-8 w-28",
-                  isSaving ? "loading" : "",
+                  isSaving || isSubmitting ? "loading" : "",
                 )}
               >
                 Submit
@@ -248,13 +268,14 @@ const BeesApp = () => {
               "Loading..."
             ) : (
               <div className="flex flex-wrap">
-                {data.map((v) => (
+                {[...data].reverse().map((v) => (
                   <div
                     key={v.id}
                     className="card card-bordered w-72 mr-2 mb-2 text-primary-content"
                   >
                     <div className="card-body relative">
-                      {v.get("owner") === user.get("ethAddress") && (
+                      {v?.get("owner")?.toLowerCase() ===
+                        account?.toLowerCase() && (
                         <div
                           onClick={() => redeemTask(v.id)}
                           className="absolute right-4 top-4"
@@ -285,13 +306,17 @@ const BeesApp = () => {
                       </p>
 
                       <div className="card-actions items-center">
-                        {user?.get("ethAddress")?.toLowerCase() ===
+                        {account?.toLowerCase() ===
                         v?.get("address")?.toLowerCase() ? (
                           <button
                             onClick={() => claimTask(v?.get("counter"))}
-                            className="btn btn-secondary"
+                            className={classNames(
+                              "btn",
+                              isClaimed ? "btn-success" : "btn-secondary",
+                              isClaiming ? "loading" : "",
+                            )}
                           >
-                            Claim
+                            {isClaimed ? "Claimed!" : "Claim"}
                           </button>
                         ) : null}
                         <p className="justify-end">

@@ -8,7 +8,8 @@ const QuickStart = () => {
       <div>
         <h1 className="text-8xl">PolyBees</h1>
         <p className="text-2xl text-primary-content max-w-sm mt-4">
-          Web3 escrow service to pay influencers for completed work in web2
+          Trustless peer-to-peer web3 escrow service for web2 influencer
+          marketing
         </p>
         <NavLink to="/beesapp">
           <button className="btn btn btn-primary mt-4">Explore</button>
