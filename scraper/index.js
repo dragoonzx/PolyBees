@@ -42,9 +42,7 @@ twitter.get("/:handle/:text", async (req, res) => {
   const isHandleRight = results.find((v) => v.text === tweetText) ?? true;
   browser.close();
 
-  // if (isHandleRight) {
-
-  // }
+  res(isHandleRight);
 
   // // Login
   // await page.$eval(

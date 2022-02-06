@@ -6,6 +6,10 @@ import {
 } from "react-moralis";
 import classNames from "classnames";
 import { toast } from "react-toastify";
+import { ethers } from "ethers";
+import TwitterModule from "../../abis/TwitterModule.json";
+
+const TWITTER_CONTRACT = "0xC7E62A952AF4A0bCCc8A73446e6243B454F6835D";
 
 const BeesApp = () => {
   const [panel, setPanel] = useState("list");
@@ -21,10 +25,53 @@ const BeesApp = () => {
     bounty: 0,
   });
 
+  const submitOfferContract = async ({
+    influencerHandle,
+    requiredText,
+    rewardAddress,
+    value,
+  }) => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+
+    const twitterContract = new ethers.Contract(
+      TWITTER_CONTRACT,
+      TwitterModule,
+      signer,
+    );
+
+    await twitterContract.newOffer(
+      influencerHandle,
+      requiredText,
+      rewardAddress,
+      { value },
+    );
+  };
+
   const submitForm = async () => {
     try {
-      await save({ ...fields, owner: user?.get("ethAddress") });
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const twitterContract = new ethers.Contract(
+        TWITTER_CONTRACT,
+        TwitterModule,
+        signer,
+      );
+      // ether callStatic counter and set it into order
+      const counter = await twitterContract.counter();
+      console.log({ counter });
+      await save({
+        ...fields,
+        owner: user?.get("ethAddress"),
+        counter: counter + 1,
+      });
       await fetch();
+      await submitOfferContract({
+        influencerHandle: fields.twitter,
+        requiredText: fields.text,
+        rewardAddress: fields.address,
+        value: fields.bounty,
+      });
 
       toast.success("Successfully saved");
       setTimeout(() => {
@@ -37,12 +84,42 @@ const BeesApp = () => {
         // route to all jobs
       }, 500);
     } catch (err) {
+      console.error(err);
       toast.error("Error");
     }
   };
 
   const redeemTask = (id) => {
     console.log(id);
+  };
+
+  const claimTask = async (offerId) => {
+    const signer = new ethers.Wallet(process.env.REACT_APP_DECIDER_KEY);
+
+    const twitterContract = new ethers.Contract(
+      TWITTER_CONTRACT,
+      TwitterModule,
+      signer,
+    );
+
+    await twitterContract.resolveOffer(offerId);
+
+    toast.success("Successfully claimed");
+
+    await fetch("https://api.nftport.xyz/v0/mints/easy/urls", {
+      method: "POST",
+      headers: {
+        Authorization: process.env.REACT_APP_NFT_PORT,
+      },
+      body: JSON.stringify({
+        chain: "polygon",
+        name: "PolyBees",
+        description: "Proof of Work NFT",
+        file_url:
+          "https://raw.githubusercontent.com/dragoonzx/PolyBees/cd140337fbe4e28e1c558b616c92d8ce8c48d864/src/assets/logo.svg",
+        mint_to_address: user?.get("ethAddress"),
+      }),
+    });
   };
 
   console.log(data);
@@ -104,7 +181,7 @@ const BeesApp = () => {
                   }
                   type="text"
                   placeholder="Hey, check this amazing event @placeholder"
-                  className="input"
+                  className="input text-primary-content"
                 />
               </div>
               <div className="form-control">
@@ -118,7 +195,7 @@ const BeesApp = () => {
                   }
                   type="text"
                   placeholder="@cryptoinfluencer3000"
-                  className="input"
+                  className="input text-primary-content"
                 />
               </div>
               <div className="form-control">
@@ -134,7 +211,7 @@ const BeesApp = () => {
                   }
                   type="text"
                   placeholder="0xB02279F5D6F34851634Aa48ffa4d6d127c0b6998"
-                  className="input"
+                  className="input text-primary-content"
                 />
               </div>
               <div className="form-control">
@@ -151,7 +228,7 @@ const BeesApp = () => {
                   }
                   type="number"
                   placeholder="25 MATIC"
-                  className="input"
+                  className="input text-primary-content"
                 />
               </div>
               <button
@@ -210,7 +287,12 @@ const BeesApp = () => {
                       <div className="card-actions items-center">
                         {user?.get("ethAddress")?.toLowerCase() ===
                         v?.get("address")?.toLowerCase() ? (
-                          <button className="btn btn-secondary">Claim</button>
+                          <button
+                            onClick={() => claimTask(v?.get("counter"))}
+                            className="btn btn-secondary"
+                          >
+                            Claim
+                          </button>
                         ) : null}
                         <p className="justify-end">
                           Bounty: {v.get("bounty")} MATIC
