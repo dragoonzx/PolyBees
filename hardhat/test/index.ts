@@ -1,14 +1,13 @@
 import { expect, use } from "chai";
 import { Contract, Wallet } from "ethers";
 import { ethers } from "hardhat";
-import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
+import { deployContract, MockProvider, solidity } from "ethereum-waffle";
 import { decryptJsonWalletSync } from "@ethersproject/json-wallets";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { TwitterModule } from "../typechain";
 
 describe("TwitterModule", function () {
-
-  let twitterModule : TwitterModule;
+  let twitterModule: TwitterModule;
   let wallet1: SignerWithAddress;
   let wallet2: SignerWithAddress;
 
@@ -23,11 +22,17 @@ describe("TwitterModule", function () {
   });
 
   it("Place offer", async function () {
-    await twitterModule.connect(wallet1).newOffer("@test", "test!", wallet2.address);
-    const myOffers = await twitterModule.connect(wallet1).callStatic.getOffersFromMe();
+    await twitterModule
+      .connect(wallet1)
+      .newOffer("@test", "test!", wallet2.address);
+    const myOffers = await twitterModule
+      .connect(wallet1)
+      .callStatic.getOffersFromMe();
     expect(myOffers.length == 1);
 
-    const offersByWorker = await twitterModule.connect(wallet2).callStatic.getOffersToMe();
+    const offersByWorker = await twitterModule
+      .connect(wallet2)
+      .callStatic.getOffersToMe();
     expect(offersByWorker.length == 1);
   });
 });
