@@ -6,20 +6,11 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+  const TwitterModule = await ethers.getContractFactory("TwitterModule");
+  const twitterModule = await TwitterModule.deploy();
+  await twitterModule.deployed();
 
-  // We get the contract to deploy
-  const Greeter = await ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
-
-  await greeter.deployed();
-
-  console.log("Greeter deployed to:", greeter.address);
+  console.log("TwitterModule deployed to:", twitterModule.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
