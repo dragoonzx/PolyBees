@@ -6,6 +6,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
+require('@openzeppelin/hardhat-upgrades');
 
 dotenv.config();
 
@@ -30,6 +31,10 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    matic: {
+      url: "https://rpc-mumbai.maticvigil.com",
+      accounts: [process.env.PRIVATE_KEY || ""]
+    }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
