@@ -5,6 +5,7 @@ import {
   Switch,
   Route,
   Redirect,
+  NavLink,
 } from "react-router-dom";
 import Account from "components/Account/Account";
 import Chains from "components/Chains";
@@ -21,6 +22,7 @@ import QuickStart from "components/QuickStart";
 import Contract from "components/Contract/Contract";
 import Ramper from "components/Ramper";
 import polygon from "./assets/polygon.svg";
+import logo from "./assets/logo.svg";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const { Header } = Layout;
@@ -67,7 +69,9 @@ const App = ({ isServerInfo }) => {
       <Router>
         <Header style={styles.header} className="bg-base-200">
           <div className="container mx-auto flex justify-between">
-            <p>PolyBees</p>
+            <NavLink to="/">
+              <img className="h-16 p-1" src={logo} alt="" />
+            </NavLink>
             <div style={styles.headerRight}>
               <Chains />
               <NativeBalance />

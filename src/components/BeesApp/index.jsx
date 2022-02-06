@@ -72,7 +72,9 @@ const BeesApp = () => {
             v?.get("address")?.toLowerCase() ===
             user?.get("ethAddress")?.toLowerCase(),
         ) ? (
-          <div className="indicator-item badge badge-primary">You have new</div>
+          <div className="indicator-item badge badge-primary">
+            You have new one
+          </div>
         ) : null}
       </div>
       <button
