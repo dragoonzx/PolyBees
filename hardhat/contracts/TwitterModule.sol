@@ -13,6 +13,7 @@ contract TwitterModule {
     address payable rewardAddress
   ) external payable {
     offers[counter] = TwitterOffer(
+      counter,
       influencerHandle,
       requiredText,
       rewardAddress,
@@ -60,6 +61,7 @@ contract TwitterModule {
 }
 
 struct TwitterOffer {
+  uint256 id;
   string influencerHandle;
   string requiredText;
   address payable rewardAddress;
